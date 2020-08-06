@@ -17,6 +17,25 @@ services:
     environment:
       MONGO_URI: mongodb://mongodb
       REDIS_URL: redis://redis
+      PAYMENTS_URL: http://payments/
+  
+  orders-payment-agent:
+    build:
+      context: orders
+    command: node dist/payment-agent.js
+    environment:
+      MONGO_URI: mongodb://mongodb
+      REDIS_URL: redis://redis
+      PAYMENTS_URL: http://payments/
+
+  orders-delivery-agent:
+    build:
+      context: orders
+    command: node dist/delivery-agent.js
+    environment:
+      MONGO_URI: mongodb://mongodb
+      REDIS_URL: redis://redis
+      PAYMENTS_URL: http://payments/
 
   payments:
     build:
