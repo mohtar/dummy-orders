@@ -1,0 +1,150 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: mohtar/dummy-orders-frontend
+          imagePullPolicy: Always
+          args: [node, dist/server.js, '80']
+          env:
+            - name: ORDERS_URL
+              value: http://orders/
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders
+  labels:
+    app: orders
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orders
+  template:
+    metadata:
+      labels:
+        app: orders
+    spec:
+      containers:
+        - name: orders
+          image: mohtar/dummy-orders-orders
+          imagePullPolicy: Always
+          args: [node, dist/server.js, '80']
+          env:
+            - name: MONGO_URI
+              value: mongodb://mongodb
+            - name: REDIS_URL
+              value: redis://redis
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-agent
+  labels:
+    app: orders-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orders-agent
+  template:
+    metadata:
+      labels:
+        app: orders-agent
+    spec:
+      containers:
+        - name: orders-agent
+          image: mohtar/dummy-orders-orders
+          imagePullPolicy: Always
+          args: [node, dist/agent.js]
+          env:
+            - name: MONGO_URI
+              value: mongodb://mongodb
+            - name: REDIS_URL
+              value: redis://redis
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments
+  labels:
+    app: payments
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payments
+  template:
+    metadata:
+      labels:
+        app: payments
+    spec:
+      containers:
+        - name: payments
+          image: mohtar/dummy-orders-payments
+          imagePullPolicy: Always
+          args: [node, dist/server.js, '80']
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  labels:
+    app: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:4
+          imagePullPolicy: Always
+          args: [--storageEngine, ephemeralForTest]
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis
+          imagePullPolicy: Always
