@@ -51,6 +51,8 @@ spec:
               value: mongodb://mongodb
             - name: REDIS_URL
               value: redis://redis
+            - name: PAYMENTS_URL
+              value: http://payments/
 
 ---
 apiVersion: apps/v1
@@ -79,6 +81,8 @@ spec:
               value: mongodb://mongodb
             - name: REDIS_URL
               value: redis://redis
+            - name: PAYMENTS_URL
+              value: http://payments/
 
 ---
 apiVersion: apps/v1
