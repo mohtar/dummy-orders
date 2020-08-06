@@ -1,25 +1,10 @@
-import {MongoClient} from 'mongodb';
 import {Request, Response, NextFunction} from 'express';
-import {StateMachine} from './state-machine';
-import * as uuid from 'uuid';
+import * as orders from './orders';
 import bodyParser from 'body-parser';
 import express from 'express';
+import redis from 'redis';
 
-const orderStateMachine: StateMachine<string, string> = new StateMachine([
-  ['confirm', [['created', 'confirmed']]],
-  [
-    'cancel',
-    [
-      ['created', 'cancelled'],
-      ['confirmed', 'cancelled'],
-    ],
-  ],
-  ['deliver', [['confirmed', 'delivered']]],
-]);
-
-function getMongoClient(): Promise<MongoClient> {
-  return MongoClient.connect(process.env.MONGO_URI);
-}
+const redisClient = redis.createClient(process.env.REDIS_URL);
 
 function wrapAsync(
   f: (req: Request, res: Response, next: NextFunction) => any,
@@ -34,18 +19,14 @@ function wrapAsync(
 }
 
 const createOrder = wrapAsync(async (req, res) => {
-  const client = await getMongoClient();
-  const id = uuid.v4();
-  const {currency, amount} = req.body;
-  const order = {id, status: 'created', currency, amount};
-  await client.db().collection('orders').insertOne(order);
+  const order = await orders.create(req.body);
+  redisClient.publish('events', JSON.stringify(order));
   res.json(order);
 });
 
 const retrieveOrder = wrapAsync(async (req, res) => {
-  const client = await getMongoClient();
   const {id} = req.params;
-  const order = await client.db().collection('orders').findOne({id});
+  const order = await orders.byId(id);
   if (order) {
     res.json(order);
   } else {
@@ -54,50 +35,15 @@ const retrieveOrder = wrapAsync(async (req, res) => {
 });
 
 const listOrders = wrapAsync(async (req, res) => {
-  const client = await getMongoClient();
   const {first, after = 0} = req.body;
-  const orders = await client
-    .db()
-    .collection('orders')
-    .find()
-    .skip(parseInt(after, 10))
-    .limit(parseInt(first, 10))
-    .toArray();
-  res.json(orders);
+  res.json(await orders.all(parseInt(first, 10), parseInt(after, 10)));
 });
 
 const transitionOrder = wrapAsync(async (req, res) => {
-  const client = await getMongoClient();
   const {id, transition} = req.params;
-  const session = client.startSession();
-  try {
-    await session.withTransaction(async () => {
-      const order = await client.db().collection('orders').findOne({id});
-      if (order) {
-        const nextState = orderStateMachine.getNextState(
-          order.status,
-          transition,
-        );
-        if (nextState) {
-          const result = await client
-            .db()
-            .collection('orders')
-            .findOneAndUpdate(
-              {id},
-              {$set: {status: nextState}},
-              {returnOriginal: false},
-            );
-          res.json(result.value);
-        } else {
-          res.status(400).json({error: 'invalid_request'});
-        }
-      } else {
-        res.status(404).send({error: 'not_found'});
-      }
-    });
-  } finally {
-    await session.endSession();
-  }
+  const order = await orders.transitionOrder(id, transition);
+  redisClient.publish('events', JSON.stringify(order));
+  res.json(order);
 });
 
 const app = express();

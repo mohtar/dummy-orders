@@ -6,7 +6,7 @@ async function createPayment(req: Request, res: Response) {
   const id = uuid.v4();
   const currency = req.body.currency;
   const amount = req.body.amount;
-  const statuses = ['succeeded', 'failed'];
+  const statuses = ['confirmed', 'declined'];
   const status = statuses[Math.floor(Math.random() * statuses.length)];
   res.json({id, currency, amount, status});
 }

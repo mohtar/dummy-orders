@@ -75,10 +75,10 @@ test('cancel order', async () => {
   }
 
   // Cancel twice
-  await request(app).post(`/orders/${id}/cancel`).expect(400);
+  await request(app).post(`/orders/${id}/cancel`).expect(500);
 });
 
 test('cancel bogus order', async () => {
   const id = 'bogus';
-  await request(app).post(`/orders/${id}/cancel`).expect(404);
+  await request(app).post(`/orders/${id}/cancel`).expect(500);
 });
