@@ -4,6 +4,11 @@ import {StateMachine} from './state-machine';
 import * as uuid from 'uuid';
 import bodyParser from 'body-parser';
 import express from 'express';
+import redis from 'redis';
+
+const redisClient = process.env.REDIS_URL
+  ? redis.createClient(process.env.REDIS_URL)
+  : {publish(chan: string, message: string) {}};
 
 const orderStateMachine: StateMachine<string, string> = new StateMachine([
   ['confirm', [['created', 'confirmed']]],
@@ -49,6 +54,7 @@ export async function create(body: any) {
   const {currency, amount} = body;
   const order = {id, status: 'created', currency, amount};
   await client.db().collection('orders').insertOne(order);
+  redisClient.publish('events', JSON.stringify({order}));
   return order;
 }
 
@@ -80,7 +86,9 @@ export async function transitionOrder(id: string, transition: string) {
         throw 'not_found';
       }
     });
-    return result.value;
+    const order = result.value;
+    redisClient.publish('events', JSON.stringify({order}));
+    return order;
   } finally {
     await session.endSession();
   }

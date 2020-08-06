@@ -2,9 +2,6 @@ import {Request, Response, NextFunction} from 'express';
 import * as orders from './orders';
 import bodyParser from 'body-parser';
 import express from 'express';
-import redis from 'redis';
-
-const redisClient = redis.createClient(process.env.REDIS_URL);
 
 function wrapAsync(
   f: (req: Request, res: Response, next: NextFunction) => any,
@@ -19,9 +16,7 @@ function wrapAsync(
 }
 
 const createOrder = wrapAsync(async (req, res) => {
-  const order = await orders.create(req.body);
-  redisClient.publish('events', JSON.stringify({order}));
-  res.json(order);
+  res.json(await orders.create(req.body));
 });
 
 const retrieveOrder = wrapAsync(async (req, res) => {
@@ -41,9 +36,7 @@ const listOrders = wrapAsync(async (req, res) => {
 
 const transitionOrder = wrapAsync(async (req, res) => {
   const {id, transition} = req.params;
-  const order = await orders.transitionOrder(id, transition);
-  redisClient.publish('events', JSON.stringify({order}));
-  res.json(order);
+  res.json(await orders.transitionOrder(id, transition));
 });
 
 const app = express();
