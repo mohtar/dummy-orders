@@ -20,7 +20,7 @@ function wrapAsync(
 
 const createOrder = wrapAsync(async (req, res) => {
   const order = await orders.create(req.body);
-  redisClient.publish('events', JSON.stringify(order));
+  redisClient.publish('events', JSON.stringify({order}));
   res.json(order);
 });
 
@@ -42,7 +42,7 @@ const listOrders = wrapAsync(async (req, res) => {
 const transitionOrder = wrapAsync(async (req, res) => {
   const {id, transition} = req.params;
   const order = await orders.transitionOrder(id, transition);
-  redisClient.publish('events', JSON.stringify(order));
+  redisClient.publish('events', JSON.stringify({order}));
   res.json(order);
 });
 
