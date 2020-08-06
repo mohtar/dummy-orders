@@ -1,0 +1,30 @@
+{
+  "name": "payments",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest"
+  },
+  "prettier": {
+    "bracketSpacing": false,
+    "singleQuote": true,
+    "trailingComma": "all"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.7",
+    "@types/uuid": "^8.0.1",
+    "@types/jest": "^26.0.8",
+    "@types/supertest": "^2.0.10",
+    "jest": "^26.2.2",
+    "supertest": "^4.0.2",
+    "ts-jest": "^26.1.4",
+    "typescript": "^3.9.7"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testMatch": ["**/src/*.test.ts"]
+  }
+}

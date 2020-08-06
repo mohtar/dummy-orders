@@ -1,0 +1,4 @@
+coverage/
+dist/
+frontend/static/js/main.js
+node_modules/
