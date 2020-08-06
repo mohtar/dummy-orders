@@ -46,43 +46,61 @@ spec:
           image: mohtar/dummy-orders-orders
           imagePullPolicy: Always
           args: [node, dist/server.js, '80']
-          env:
-            - name: MONGO_URI
-              value: mongodb://mongodb
-            - name: REDIS_URL
-              value: redis://redis
-            - name: PAYMENTS_URL
-              value: http://payments/
+          envFrom:
+            - configMapRef:
+                name: orders-env
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: orders-agent
+  name: orders-payment-agent
   labels:
-    app: orders-agent
+    app: orders-payment-agent
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: orders-agent
+      app: orders-payment-agent
   template:
     metadata:
       labels:
-        app: orders-agent
+        app: orders-payment-agent
     spec:
       containers:
-        - name: orders-agent
+        - name: orders-payment-agent
           image: mohtar/dummy-orders-orders
           imagePullPolicy: Always
-          args: [node, dist/agent.js]
-          env:
-            - name: MONGO_URI
-              value: mongodb://mongodb
-            - name: REDIS_URL
-              value: redis://redis
-            - name: PAYMENTS_URL
-              value: http://payments/
+          args: [node, dist/payment-agent.js]
+          envFrom:
+            - configMapRef:
+                name: orders-env
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-delivery-agent
+  labels:
+    app: orders-delivery-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orders-delivery-agent
+  template:
+    metadata:
+      labels:
+        app: orders-delivery-agent
+    spec:
+      containers:
+        - name: orders-delivery-agent
+          image: mohtar/dummy-orders-orders
+          imagePullPolicy: Always
+          args: [node, dist/delivery-agent.js]
+          envFrom:
+            - configMapRef:
+                name: orders-env
 
 ---
 apiVersion: apps/v1
