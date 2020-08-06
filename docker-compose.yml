@@ -1,0 +1,36 @@
+version: "2.3"
+
+services:
+  frontend:
+    build:
+      context: frontend
+    command: node dist/server.js 80
+    environment:
+      ORDERS_URL: http://orders/
+    ports:
+      - "8080:80"
+
+  orders:
+    build:
+      context: orders
+    command: node dist/server.js 80
+    environment:
+      MONGO_URI: mongodb://mongodb
+      REDIS_URL: redis://redis
+
+  payments:
+    build:
+      context: payments
+    command: node dist/server.js 80
+
+  mongodb:
+    image: mongo:4.4
+    volumes:
+      - mongo-data:/data/db
+  
+  redis:
+    image: redis
+
+volumes:
+  mongo-data:
+    driver: local
